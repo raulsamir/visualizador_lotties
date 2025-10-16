@@ -1,26 +1,32 @@
 
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Juego de Memoria</title>
+  <title>Juego de Descubrir Cuadros</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       margin: 0;
       font-family: sans-serif;
-      background: url('background.webp') no-repeat center center fixed;
+      background: url('background.webp') no-repeat center center;
       background-size: cover;
+      color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      height: 100vh;
+      min-height: 100vh;
       padding: 20px;
-      color: white;
     }
 
     h1 {
+      margin-bottom: 10px;
+    }
+
+    #logo {
+      width: 300px;
       margin-bottom: 10px;
     }
 
@@ -38,51 +44,19 @@
     }
 
     .tile {
-      background: white;
-      border-radius: 8px;
       position: relative;
-      overflow: hidden;
+      width: 100%;
       aspect-ratio: 2 / 3;
+      background-color: transparent;
+      border: none;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
-    .tile img.cover {
+    .tile img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-    }
-
-    .tile img.option {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: none;
-    }
-
-    .tile.revealed img.cover {
-      display: none;
-    }
-
-    .tile.revealed img.option {
-      display: block;
-    }
-
-    .logo-space {
-      position: absolute;
-      top: 5px;
-      left: 0;
-      right: 0;
-      height: 30px;
-      background: url('logo_texto.webp') no-repeat center;
-      background-size: contain;
-      display: block;
-    }
-
-    .tile.revealed .logo-space {
-      display: none;
+      border-radius: 10px;
     }
 
     button {
@@ -95,108 +69,112 @@
       border-radius: 5px;
       cursor: pointer;
     }
+
+    button:hover {
+      background: #cce0ff;
+    }
   </style>
 </head>
 <body>
-  <h1>Juego de Memoria</h1>
-  <div id="timer">Tiempo: 0 segundos</div>
-  <div class="grid" id="gameGrid"></div>
-  <button id="resetBtn">Reiniciar juego</button>
 
-  <script>
-    const images = [
-      'opciones1.webp', 'opciones2.webp', 'opciones3.webp',
-      'opciones4.webp', 'opciones5.webp', 'opciones6.webp'
-    ];
-    let items = [...images, ...images];
-    let firstTile = null;
-    let secondTile = null;
-    let lockBoard = false;
-    let timerInterval;
-    let seconds = 0;
+<img id="logo" src="logo_texto.webp" alt="Logo">
+<h1>Descubre lo que hay detrás</h1>
+<div id="timer">Tiempo: 0 segundos</div>
+<div class="grid" id="gameGrid"></div>
+<button id="resetBtn">Reiniciar juego</button>
 
-    const grid = document.getElementById("gameGrid");
-    const resetBtn = document.getElementById("resetBtn");
-    const timerDisplay = document.getElementById("timer");
+<script>
+  const images = [
+    'opciones1.webp', 'opciones2.webp', 'opciones3.webp',
+    'opciones4.webp', 'opciones5.webp', 'opciones6.webp'
+  ];
+  let items = [...images, ...images]; // 12 cuadros (6 pares)
+  let firstTile = null;
+  let secondTile = null;
+  let lockBoard = false;
+  let timerInterval;
+  let seconds = 0;
 
-    function shuffle(array) {
-      return array.sort(() => Math.random() - 0.5);
-    }
+  const grid = document.getElementById("gameGrid");
+  const resetBtn = document.getElementById("resetBtn");
+  const timerDisplay = document.getElementById("timer");
 
-    function startTimer() {
-      clearInterval(timerInterval);
-      seconds = 0;
-      timerDisplay.textContent = "Tiempo: 0 segundos";
-      timerInterval = setInterval(() => {
-        seconds++;
-        timerDisplay.textContent = `Tiempo: ${seconds} segundos`;
-      }, 1000);
-    }
+  function shuffle(array) {
+    return array.sort(() => Math.random() - 0.5);
+  }
 
-    function createTiles() {
-      grid.innerHTML = "";
-      firstTile = null;
-      secondTile = null;
-      lockBoard = false;
-      let shuffled = shuffle(items);
+  function startTimer() {
+    clearInterval(timerInterval);
+    seconds = 0;
+    timerDisplay.textContent = "Tiempo: 0 segundos";
+    timerInterval = setInterval(() => {
+      seconds++;
+      timerDisplay.textContent = `Tiempo: ${seconds} segundos`;
+    }, 1000);
+  }
 
-      shuffled.forEach((imgSrc, index) => {
-        const tile = document.createElement("div");
-        tile.classList.add("tile");
-        tile.dataset.value = imgSrc;
+  function createTiles() {
+    grid.innerHTML = "";
+    firstTile = null;
+    secondTile = null;
+    lockBoard = false;
+    let shuffled = shuffle(items);
 
-        const logo = document.createElement("div");
-        logo.classList.add("logo-space");
+    shuffled.forEach((imgSrc, index) => {
+      const tile = document.createElement("button");
+      tile.classList.add("tile");
+      tile.dataset.value = imgSrc;
+      tile.dataset.index = index;
 
-        const coverImg = document.createElement("img");
-        coverImg.src = "cover.webp";
-        coverImg.classList.add("cover");
+      const img = document.createElement("img");
+      img.src = "cover.webp";
+      img.alt = "Cubierta";
+      tile.appendChild(img);
 
-        const optionImg = document.createElement("img");
-        optionImg.src = imgSrc;
-        optionImg.classList.add("option");
+      tile.addEventListener("click", () => revealTile(tile));
+      grid.appendChild(tile);
+    });
 
-        tile.appendChild(logo);
-        tile.appendChild(coverImg);
-        tile.appendChild(optionImg);
+    startTimer();
+  }
 
-        tile.addEventListener("click", () => revealTile(tile));
-        grid.appendChild(tile);
-      });
+  function revealTile(tile) {
+    if (lockBoard || tile.classList.contains("revealed")) return;
 
-      startTimer();
-    }
+    const img = tile.querySelector("img");
+    img.src = tile.dataset.value;
+    tile.classList.add("revealed");
 
-    function revealTile(tile) {
-      if (lockBoard || tile.classList.contains("revealed")) return;
+    if (!firstTile) {
+      firstTile = tile;
+    } else {
+      secondTile = tile;
+      lockBoard = true;
 
-      tile.classList.add("revealed");
-
-      if (!firstTile) {
-        firstTile = tile;
+      if (firstTile.dataset.value === secondTile.dataset.value) {
+        resetTurn();
       } else {
-        secondTile = tile;
-        lockBoard = true;
-
-        if (firstTile.dataset.value === secondTile.dataset.value) {
+        setTimeout(() => {
+          firstTile.querySelector("img").src = "cover.webp";
+          secondTile.querySelector("img").src = "cover.webp";
+          firstTile.classList.remove("revealed");
+          secondTile.classList.remove("revealed");
           resetTurn();
-        } else {
-          setTimeout(() => {
-            firstTile.classList.remove("revealed");
-            secondTile.classList.remove("revealed");
-            resetTurn();
-          }, 1000);
-        }
+        }, 1000);
       }
     }
+  }
 
-    function resetTurn() {
-      [firstTile, secondTile] = [null, null];
-      lockBoard = false;
-    }
+  function resetTurn() {
+    [firstTile, secondTile] = [null, null];
+    lockBoard = false;
+  }
 
-    resetBtn.addEventListener("click", createTiles);
-    createTiles();
-  </script>
+  resetBtn.addEventListener("click", createTiles);
+
+  // Inicializar juego
+  createTiles();
+</script>
+
 </body>
 </html>
