@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Juego de Memoria</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: url('background.webp') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #logo {
+      margin-top: 20px;
+      width: 300px;
+    }
+
+    #timer {
+      font-size: 24px;
+      color: white;
+      margin: 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding: 20px;
+      width: 90%;
+      max-width: 800px;
+    }
+
+    .tile {
+      width: 100%;
+      aspect-ratio: 1/1;
+      background-image: url('cover.webp');
+      background-size: cover;
+      border: 2px solid white;
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .tile .logo-space {
+      position: absolute;
+      top: 5px;
+      left: 0;
+      right: 0;
+      height: 30px;
+      background: url('logo_texto.webp') no-repeat center;
+      background-size: contain;
+    }
+
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background: white;
+      color: #004080;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <img id="logo" src="logo_texto.webp" alt="Logo">
+  <div id="timer">Tiempo: 0 segundos</div>
+  <div class="grid" id="gameGrid"></div>
+  <button onclick="createTiles()">Reiniciar juego</button>
+
+  <script>
+    const images = [
+      'opciones1.webp', 'opciones2.webp', 'opciones3.webp',
+      'opciones4.webp', 'opciones5.webp', 'opciones6.webp'
+    ];
+    let items = [...images, ...images];
+    let firstTile = null;
+    let secondTile = null;
+    let lockBoard = false;
+    let timerInterval;
+    let seconds = 0;
+
+    const grid = document.getElementById("gameGrid");
+    const timerDisplay = document.getElementById("timer");
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      seconds = 0;
+      timerDisplay.textContent = "Tiempo: 0 segundos";
+      timerInterval = setInterval(() => {
+        seconds++;
+        timerDisplay.textContent = `Tiempo: ${seconds} segundos`;
+      }, 1000);
+    }
+
+    function createTiles() {
+      grid.innerHTML = "";
+      firstTile = null;
+      secondTile = null;
+      lockBoard = false;
+      let shuffled = shuffle(items);
+
+      shuffled.forEach((imgSrc, index) => {
+        const tile = document.createElement("div");
+        tile.classList.add("tile");
+        tile.dataset.image = imgSrc;
+        tile.dataset.index = index;
+
+        const logoSpace = document.createElement("div");
+        logoSpace.classList.add("logo-space");
+        tile.appendChild(logoSpace);
+
+        tile.addEventListener("click", () => revealTile(tile));
+        grid.appendChild(tile);
+      });
+
+      startTimer();
+    }
+
+    function revealTile(tile) {
+      if (lockBoard || tile.classList.contains("revealed")) return;
+
+      const img = document.createElement("img");
+      img.src = tile.dataset.image;
+      tile.innerHTML = "";
+      tile.appendChild(img);
+      tile.classList.add("revealed");
+
+      if (!firstTile) {
+        firstTile = tile;
+      } else {
+        secondTile = tile;
+        lockBoard = true;
+
+        if (firstTile.dataset.image === secondTile.dataset.image) {
+          resetTurn();
+        } else {
+          setTimeout(() => {
+            firstTile.innerHTML = '<div class="logo-space"></div>';
+            secondTile.innerHTML = '<div class="logo-space"></div>';
+            firstTile.classList.remove("revealed");
+            secondTile.classList.remove("revealed");
+            resetTurn();
+          }, 1000);
+        }
+      }
+    }
+
+    function resetTurn() {
+      [firstTile, secondTile] = [null, null];
+      lockBoard = false;
+    }
+
+    createTiles();
+  </script>
+</body>
+</html>
