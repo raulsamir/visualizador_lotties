@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Juego de Memoria</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: url('background.webp') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 5px;
+    }
+    #timer {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      width: 90%;
+      max-width: 600px;
+      aspect-ratio: 2 / 3;
+    }
+    .tile {
+      background: white;
+      color: #004080;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .tile img {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background: white;
+      color: #004080;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #cce0ff;
+    }
+  </style>
+</head>
+<body>
+  <img src="logo_texto.webp" alt="Logo" style="max-width: 300px; margin-bottom: 10px;">
+  <h1>Descubre lo que hay detrás</h1>
+  <div id="timer">Tiempo: 0 segundos</div>
+  <div class="grid" id="gameGrid"></div>
+  <button id="resetBtn">Reiniciar juego</button>
+
+  <script>
+    const icons = ["opciones1.webp", "opciones2.webp", "opciones3.webp", "opciones4.webp", "opciones5.webp", "opciones6.webp"];
+    let items = [...icons, ...icons];
+    let firstTile = null;
+    let secondTile = null;
+    let lockBoard = false;
+    let timerInterval;
+    let seconds = 0;
+
+    const grid = document.getElementById("gameGrid");
+    const resetBtn = document.getElementById("resetBtn");
+    const timerDisplay = document.getElementById("timer");
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      seconds = 0;
+      timerDisplay.textContent = "Tiempo: 0 segundos";
+      timerInterval = setInterval(() => {
+        seconds++;
+        timerDisplay.textContent = `Tiempo: ${seconds} segundos`;
+      }, 1000);
+    }
+
+    function createTiles() {
+      grid.innerHTML = "";
+      firstTile = null;
+      secondTile = null;
+      lockBoard = false;
+      let shuffled = shuffle(items);
+
+      shuffled.forEach((item, index) => {
+        const tile = document.createElement("div");
+        tile.classList.add("tile");
+        tile.dataset.value = item;
+        tile.dataset.index = index;
+
+        const img = document.createElement("img");
+        img.src = "cover.webp";
+        tile.appendChild(img);
+
+        tile.addEventListener("click", () => revealTile(tile));
+        grid.appendChild(tile);
+      });
+
+      startTimer();
+    }
+
+    function revealTile(tile) {
+      if (lockBoard || tile.classList.contains("revealed")) return;
+
+      const img = tile.querySelector("img");
+      img.src = tile.dataset.value;
+      tile.classList.add("revealed");
+
+      if (!firstTile) {
+        firstTile = tile;
+      } else {
+        secondTile = tile;
+        lockBoard = true;
+
+        if (firstTile.dataset.value === secondTile.dataset.value) {
+          resetTurn();
+        } else {
+          setTimeout(() => {
+            firstTile.querySelector("img").src = "cover.webp";
+            secondTile.querySelector("img").src = "cover.webp";
+            firstTile.classList.remove("revealed");
+            secondTile.classList.remove("revealed");
+            resetTurn();
+          }, 1000);
+        }
+      }
+    }
+
+    function resetTurn() {
+      [firstTile, secondTile] = [null, null];
+      lockBoard = false;
+    }
+
+    resetBtn.addEventListener("click", createTiles);
+    createTiles();
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+      });
+    }
+  </script>
+</body>
+</html>
