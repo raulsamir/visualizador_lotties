@@ -1,0 +1,15 @@
+{
+  "name": "Visualizador de Lotties",
+  "short_name": "Lotties",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#004080",
+  "theme_color": "#004080",
+  "icons": [
+    {
+      "src": "logo_web.webp",
+      "sizes": "192x192",
+      "type": "image/webp"
+    }
+  ]
+}
