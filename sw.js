@@ -1,7 +1,7 @@
 
 const CACHE_NAME = 'memoria-cache-v1';
 const urlsToCache = [
-  'index.html',
+  'juegowebapp.html',
   'manifest.json',
   'sw.js',
   'logo_texto.webp',
